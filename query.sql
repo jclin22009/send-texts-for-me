@@ -1,7 +1,5 @@
 -- TODO:
 -- Generalize this to work on all chats at once (rather than one at a time)
--- Filter out "laughed at/emphasized"
--- Can we filter out non-responses (e.g. a new text unrelated to a previous text from the other person)?
 
 WITH grouped_messages AS (
 WITH individual_messages AS (
@@ -17,7 +15,7 @@ FROM
     JOIN chat_message_join ON chat. "ROWID" = chat_message_join.chat_id
     JOIN message ON chat_message_join.message_id = message. "ROWID"
 WHERE
-    chat.chat_identifier = '+16509466066'
+    chat.chat_identifier = '[insert number]'
 ORDER BY
     chat.chat_identifier, message_date
 )
@@ -39,3 +37,29 @@ AND NOT pr.is_from_me
 AND com.is_from_me
 AND (length(pr.content) != 1 OR unicode(pr.content) != 65532)
 AND unicode(com.content) != 65532
+AND NOT (
+pr.content LIKE 'Loved%'
+OR pr.content LIKE '%|Loved%'
+OR com.content LIKE 'Loved%'
+OR com.content LIKE '%|Loved%'
+OR pr.content LIKE 'Liked%'
+OR pr.content LIKE '%|Liked%'
+OR com.content LIKE 'Liked%'
+OR com.content LIKE '%|Liked%'
+OR pr.content LIKE 'Disliked%'
+OR pr.content LIKE '%|Disliked%'
+OR com.content LIKE 'Disliked%'
+OR com.content LIKE '%|Disliked%'
+OR pr.content LIKE 'Laughed at%'
+OR pr.content LIKE '%|Laughed at%'
+OR com.content LIKE 'Laughed at%'
+OR com.content LIKE '%|Laughed at%'
+OR pr.content LIKE 'Emphasized%'
+OR pr.content LIKE '%|Emphasized%'
+OR com.content LIKE 'Emphasized%'
+OR com.content LIKE '%|Emphasized%'
+OR pr.content LIKE 'Questioned%'
+OR pr.content LIKE '%|Questioned%'
+OR com.content LIKE 'Questioned%'
+OR com.content LIKE '%|Questioned%'
+) 
