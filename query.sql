@@ -1,25 +1,25 @@
 -- TODO:
 -- Generalize this to work on all chats at once (rather than one at a time)
--- Filter out non-messages (likes/exclamations/etc. and pictures)
+-- Filter out "laughed at/emphasized"
 -- Can we filter out non-responses (e.g. a new text unrelated to a previous text from the other person)?
 
 WITH grouped_messages AS (
 WITH individual_messages AS (
 -- Get all messages, ordered by person and then date (for now, filtered to one person)
 SELECT
-	ROW_NUMBER() OVER (ORDER BY chat.chat_identifier, message_date) AS id,
-	message.text,
-	chat.chat_identifier,
-	message_date,
-	message.is_from_me
+    ROW_NUMBER() OVER (ORDER BY chat.chat_identifier, message_date) AS id,
+    message.text,
+    chat.chat_identifier,
+    message_date,
+    message.is_from_me
 FROM
     chat
     JOIN chat_message_join ON chat. "ROWID" = chat_message_join.chat_id
     JOIN message ON chat_message_join.message_id = message. "ROWID"
 WHERE
-	chat.chat_identifier = '[insert number here]'
+    chat.chat_identifier = '+16509466066'
 ORDER BY
-	chat.chat_identifier, message_date
+    chat.chat_identifier, message_date
 )
 -- Group adjacent texts from the same person together, and concatenate:
 -- https://stackoverflow.com/questions/47170928/group-by-adjacent-records
@@ -37,3 +37,5 @@ JOIN grouped_messages com
 WHERE pr.id + 1 = com.id
 AND NOT pr.is_from_me
 AND com.is_from_me
+AND (length(pr.content) != 1 OR unicode(pr.content) != 65532)
+AND unicode(com.content) != 65532
