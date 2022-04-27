@@ -94,7 +94,7 @@ def webhook():
 
         elif message['isSentFromMe']:
             print("---- Message from me ----")
-            try:
+            try: # TODO FOLLOWING LINE CAUSES ERROR
                 if request.json['recipient']['isMe'] \
                     or request.json['recipient']['handle'] == "jclin2.2009@gmail.com" \
                     or request.json['recipient']['handle'] == "+16509466066": # TODO very hacky
