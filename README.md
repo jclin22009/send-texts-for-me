@@ -1,21 +1,20 @@
 # send-texts-for-me
-amogus? 
 
-## Components
+> In the future, we will not text friends with our computers. Our computers will text our friends for us.
+> 
+> — Aristotle
 
-### Messages Database
+## Quickstart
 
-`~/Library/Messages/chat.db`
+### Set up program
+1. Install Jared
+2. Change Jared config file (located at `~/Library/Application Support/Jared/config.json`) to the `config.json` here
+3. Activate virtual environment
+4. Set up SQL
+5. Run server
+6. Run textbot and enjoy
 
-### iMessage Sending Library
-
-https://github.com/Rolstenhouse/py-iMessage
-
-### OpenAPI
-
-OpenAI API
-
-### Getting Started
+### Set up SQL
 
 1. Clone the repository
 2. Move you `chat.db` file into the repository directory
