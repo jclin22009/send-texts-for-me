@@ -86,23 +86,33 @@ def webhook():
             'recipient': request.json['recipient']['handle'],
             'sender': request.json['sender']['handle'],
             'isSentFromMe': request.json['sender']['isMe']}
-        if message['isSentFromMe']:
+            
+        if 'participants' in request.json['recipient']:
+            print("---- Group chat detected ---- ")
+            message['sender'] = request.json['recipient']['handle']
+            handle_response_cycle(message, request)
+
+        elif message['isSentFromMe']:
             print("---- Message from me ----")
-            if request.json['recipient']['isMe'] \
-                or request.json['recipient']['handle'] == "jclin2.2009@gmail.com" \
-                or request.json['recipient']['handle'] == "+16509466066": # TODO very hacky
-                if not message['body'].startswith('AI:'): # escape infinite response loop
-                    handle_response_cycle(message, request)
+            try:
+                if request.json['recipient']['isMe'] \
+                    or request.json['recipient']['handle'] == "jclin2.2009@gmail.com" \
+                    or request.json['recipient']['handle'] == "+16509466066": # TODO very hacky
+                    if not message['body'].startswith('AI:'): # escape infinite response loop
+                        handle_response_cycle(message, request)
+            except:
+                pass
+
         else:
-            print("---GENERAL RESPONSE!---")
+            print("---- 1 on 1 response ----")
             handle_response_cycle(message, request)
         return "Webhook received!"
+
     if request.method == 'GET':
         return "Get request received. But homie what are u trynna get??"
 
-
 if __name__ == '__main__':
     initialize_gpt()
-    # pf = ProfanityFilter()
     name = input("What's your first name? ")
     app.run(port=5000)
+    # send_message("this works??", "iMessage;+;chat562727254715241439")
