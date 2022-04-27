@@ -17,7 +17,7 @@
 
 - [ ] refine stop sequencing so it can stop a conversation
 
-- [ ] AI shouldn't respond to text message reactions
+- [ ] shouldn't respond to text message reactions
 
 ### min
 - [ ] make terminal output pretty
