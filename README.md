@@ -19,9 +19,12 @@
 
 - [ ] shouldn't respond to text message reactions
 
-- [ ] multiple conversations seem to blend into one, making the model confused -- implement user parameter?
+- [ ] THIS ONE or the next one. add multiple conversations seem to blend into one, making the model confused -- implement user parameter?
+
+- [ ] OR add previous conversations in a session into the message's prompt so the bot is CONTEXTUALLY AWARE (?)
 
 - [ ] shouldn't respond to just images
+
 
 ### min
 - [ ] make terminal output pretty
