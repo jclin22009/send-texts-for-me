@@ -19,6 +19,8 @@
 
 - [ ] shouldn't respond to text message reactions
 
+- [ ] multiple conversations seem to blend into one, making the model confused -- implement user parameter?
+
 ### min
 - [ ] make terminal output pretty
 
