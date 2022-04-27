@@ -19,7 +19,7 @@ import os
 import openai
 import string
 from flask import Flask, request
-from profanity_filter import ProfanityFilter
+# from profanity_filter import ProfanityFilter
 
 def send_message(message, recipient_id):
     '''
@@ -103,6 +103,6 @@ def webhook():
 
 if __name__ == '__main__':
     initialize_gpt()
-    pf = ProfanityFilter()
+    # pf = ProfanityFilter()
     name = input("What's your first name? ")
     app.run(port=5000)
