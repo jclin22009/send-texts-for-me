@@ -21,6 +21,8 @@
 
 - [ ] multiple conversations seem to blend into one, making the model confused -- implement user parameter?
 
+- [ ] shouldn't respond to just images
+
 ### min
 - [ ] make terminal output pretty
 
