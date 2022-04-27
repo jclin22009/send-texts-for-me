@@ -1,18 +1,36 @@
 # send-texts-for-me
 
-> In the future, we will not text friends with our computers. Our computers will text our friends for us.
+> "Never trust a computer you can't throw out of a window."
 > 
-> — Aristotle
+> — Steve Wozniak
+
+## TODO
+### priority
+[ ] Add a way to send messages to groups
+
+[ ] Add name awareness (running into bug where 'name:' is printed at end of message)
+
+[ ] fine tune
+
+### medium
+[ ] Append messages rapidly sent to me in succession into a single message/API call
+
+[ ] refine stop sequencing so it can stop a conversation
+
+### min
+[ ] make terminal output pretty
 
 ## Quickstart
 
 ### Set up program
+
 1. Install Jared
 2. Change Jared config file (located at `~/Library/Application Support/Jared/config.json`) to the `config.json` here
 3. Activate virtual environment
-4. Set up SQL
-5. Run server
-6. Run textbot and enjoy
+4. Add API key to your env
+5. Set up SQL
+6. Run server
+7. Run textbot and enjoy
 
 ### Set up SQL
 

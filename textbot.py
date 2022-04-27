@@ -26,7 +26,6 @@ def send_message(message, recipient_id):
     Sends iMessage message with Jared. Jared also allows you to attach things
     but I'm too lazy to implement that
     '''
-    # message = pf.censor(message)
     r = requests.post("http://localhost:3000/message",json={"body": {"message": message}, "recipient": {"handle": recipient_id}})
     print(r.text)
 
@@ -66,6 +65,7 @@ def handle_response_cycle(message, request):
         send_message("AI: " + response.strip("\n"), message['sender'])
 
 def clean_response(response):
+    # response = pf.censor(response)
     return response.strip("\n")
     # return response[:response.find("\n")]
     # lastPunc = max(response.rfind(i) for i in "?!.")
