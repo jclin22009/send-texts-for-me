@@ -6,7 +6,7 @@
 
 ## TODO
 ### priority
-- [ ] Add a way to send messages to groups
+- [ ] Add a way to send messages to groups. NOTE: either need to use webhook or add participants to REST API call
 
 - [ ] Add name awareness (running into bug where 'name:' is printed at end of message)
 
