@@ -1,8 +1,8 @@
 # send-texts-for-me
 
-> In the future, we will not text friends with our computers. Our computers will text our friends for us.
+> "Never trust a computer you can't throw out a window."
 > 
-> — Aristotle
+> — Steve Wozniak
 
 ## Quickstart
 
