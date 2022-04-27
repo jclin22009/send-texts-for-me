@@ -1,0 +1,3 @@
+[console_scripts]
+profanity_filter=profanity_filter.console:main
+

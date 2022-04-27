@@ -1,0 +1,41 @@
+Metadata-Version: 2.1
+Name: poetry-version
+Version: 0.1.5
+Summary: Python library for extracting version from poetry pyproject.toml file
+Home-page: https://github.com/rominf/poetry-version
+License: Apache-2.0
+Keywords: poetry,version
+Author: Roman Inflianskas
+Author-email: infroma@gmail.com
+Requires-Python: >=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Topic :: Software Development :: Build Tools
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Dist: tomlkit (>=0.4.6,<0.6.0)
+Project-URL: Repository, https://github.com/rominf/poetry-version
+Description-Content-Type: text/markdown
+
+# poetry-version
+Python library for extracting version from poetry pyproject.toml file
+
+## Installation
+To install `poetry-version` from [PyPI](https://pypi.org/project/poetry-version/) run:
+```shell
+$ pip install poetry-version
+```
+
+## Usage
+Put these lines somewhere in the main module:
+```python
+import poetry_version
+
+__version__ = poetry_version.extract(source_file=__file__)
+```
+
