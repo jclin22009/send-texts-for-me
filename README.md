@@ -1,6 +1,6 @@
 # send-texts-for-me
 
-> "Never trust a computer you can't throw out of a window."
+> "Never trust a computer you can't throw out a window."
 > 
 > — Steve Wozniak
 
