@@ -6,19 +6,19 @@
 
 ## TODO
 ### priority
-[ ] Add a way to send messages to groups
+- [ ] Add a way to send messages to groups
 
-[ ] Add name awareness (running into bug where 'name:' is printed at end of message)
+- [ ] Add name awareness (running into bug where 'name:' is printed at end of message)
 
-[ ] fine tune
+- [ ] fine tune
 
 ### medium
-[ ] Append messages rapidly sent to me in succession into a single message/API call
+- [ ] Append messages rapidly sent to me in succession into a single message/API call
 
-[ ] refine stop sequencing so it can stop a conversation
+- [ ] refine stop sequencing so it can stop a conversation
 
 ### min
-[ ] make terminal output pretty
+- [ ] make terminal output pretty
 
 ## Quickstart
 
