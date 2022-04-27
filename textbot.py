@@ -1,18 +1,5 @@
 '''
 Port 3000 is the message sending port and 5000 is the webhook port.
-
-TODO
-priority
-- Add a way to send messages to groups
-- Add name awareness (running into bug where 'name:' is printed at end of message)
-
-medium
-- Append messages rapidly sent to me in succession into a single message/API call
-- fine tune
-- refine stop sequencing so it can stop a conversation
-
-min
-- make terminal output pretty
 '''
 import requests
 import os
@@ -115,4 +102,3 @@ if __name__ == '__main__':
     initialize_gpt()
     name = input("What's your first name? ")
     app.run(port=5000)
-    # send_message("this works??", "iMessage;+;chat562727254715241439")
