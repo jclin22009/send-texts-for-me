@@ -46,7 +46,7 @@ def handle_response_cycle(message, request, messageHistory):
         messageHistory[message['sender']] += "\n" + promptString + response.lstrip("\n")
     except:
         messageHistory[message['sender']] = "\n" + promptString.lstrip("\n") + response.lstrip("\n")
-    print("[bold]Message history: [/bold]", messageHistory, "\n")
+    print("[bold]Message history: [/bold]", messageHistory[message['sender']], "\n")
     processed_response = clean_response(response)
     if not processed_response or processed_response == " ":
         print("*****AI response is empty*****")
@@ -56,6 +56,13 @@ def handle_response_cycle(message, request, messageHistory):
 def clean_response(response):
     return response.strip("\n")
 
+def should_shutup(message):
+    reactStrings = ['Laughed at', 'Loved', 'Liked', 'Disliked', 'Emphasized', 'Questioned']
+    for item in reactStrings:
+        if message['body'].startswith(item):
+            return True
+    return False
+
 app = Flask(__name__)
 @app.route('/webhook', methods=['POST'])
 def webhook():
@@ -63,7 +70,6 @@ def webhook():
     Gets invoked whenever a message is sent to the webhook. TODO Has bug where sending messages to group chats breaks JSON syntax, as recipients
     becomes a nested item (can't just do request.json['recipient']['isMe])
     '''
-    reactStrings = ['Laughed at', 'Loved', 'Liked', 'Disliked', 'Emphasized', 'Questioned']
     if request.method == 'POST':
         print(request.json)
         print("===== Messaging detected ======")
@@ -71,10 +77,11 @@ def webhook():
             'recipient': request.json['recipient']['handle'],
             'sender': request.json['sender']['handle'],
             'isSentFromMe': request.json['sender']['isMe']}
-        for item in reactStrings:
-            if message['body'].startswith(item):
-                print("Reaction detected. [italic]Skipped![/italic]")
-                return "Webhook received and ignored lol (cuz it's a reaction)" 
+
+        if (should_shutup(message)):
+            print("Reaction detected. [italic]Skipped![/italic]")
+            return "Webhook received and ignored lol (cuz it's a reaction)" 
+        
         if 'participants' in request.json['recipient']:
             print("---- Group chat detected ---- ")
             message['sender'] = request.json['recipient']['handle']
@@ -94,9 +101,6 @@ def webhook():
             print("---- 1 on 1 response ----")
             handle_response_cycle(message, request, messageHistory)
         return "Webhook received!"
-
-    if request.method == 'GET':
-        return "Get request received. But homie what are u trynna get??"
 
 if __name__ == '__main__':
     initialize_gpt()

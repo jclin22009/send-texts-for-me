@@ -17,9 +17,9 @@
 
 - [ ] refine stop sequencing so it can stop a conversation
 
-- [ ] shouldn't respond to text message reactions
+- [x] shouldn't respond to text message reactions
 
-- [ ] for each session, initialize a dictionary with the conversation thus far. Feed in this dictionary as a string into GPT each time, so that the bot is contextually aware. Hazard: ensure dictionary string size is below token limit (unlikely to exceed)
+- [x] for each session, initialize a dictionary with the conversation thus far. Feed in this dictionary as a string into GPT each time, so that the bot is contextually aware. Hazard: ensure dictionary string size is below token limit (unlikely to exceed)
 
 - [ ] shouldn't respond to when only an image is sent
 
