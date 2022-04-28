@@ -17,7 +17,7 @@ def send_message(message, recipient_id):
     '''
     message_set = message.split(".")
     for msg in message_set:
-        if not msg.startswith('AI: '):
+        if not msg.startswith('AI: '): # for separated successive sentences
             msg = "AI: " + msg
         if msg != "AI: ":
             r = requests.post("http://localhost:3000/message",json={"body": {"message": msg}, "recipient": {"handle": recipient_id}})
@@ -32,7 +32,7 @@ def get_gpt_response(message):
         engine="text-davinci-002", 
         prompt=message, stop="You:", 
         temperature=0.5,
-        max_tokens=60,
+        max_tokens=100,
         top_p=1.0,
         frequency_penalty=0.5,
         presence_penalty=0.0
@@ -59,9 +59,12 @@ def handle_response_cycle(message, request, messageHistory):
         print("*****AI response is empty*****")
     else:
         send_message("AI: " + processed_response, message['sender'])
+        # send_message(processed_response, message['sender'])
 
 def clean_response(response):
-    return response.strip("\n")
+    response = response.strip("\n")
+    response = response.strip()
+    return response
 
 def should_shutup(message):
     reactStrings = ['Laughed at', 'Loved', 'Liked', 'Disliked', 'Emphasized', 'Questioned']
