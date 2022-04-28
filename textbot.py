@@ -19,10 +19,8 @@ def send_message(message, recipient_id):
     for msg in message_set:
         if not msg.startswith('AI: '):
             msg = "AI: " + msg
-        msg = clean_response(msg)
-        if msg == "AI: ":
-            pass
-        r = requests.post("http://localhost:3000/message",json={"body": {"message": msg}, "recipient": {"handle": recipient_id}})
+        if msg != "AI: ":
+            r = requests.post("http://localhost:3000/message",json={"body": {"message": msg}, "recipient": {"handle": recipient_id}})
         # time.sleep(len(msg) / 60) simulate typing speed
         print(r.text)
 
@@ -60,7 +58,7 @@ def handle_response_cycle(message, request, messageHistory):
     if not processed_response or processed_response == " ":
         print("*****AI response is empty*****")
     else:
-        send_message("AI: " + response.strip("\n"), message['sender'])
+        send_message("AI: " + processed_response, message['sender'])
 
 def clean_response(response):
     return response.strip("\n")
@@ -93,8 +91,8 @@ def webhook():
         
         if 'participants' in request.json['recipient']:
             print("---- Group chat detected ---- ")
-            message['sender'] = request.json['recipient']['handle']
-            handle_response_cycle(message, request, messageHistory)
+            # message['sender'] = request.json['recipient']['handle']
+            # handle_response_cycle(message, request, messageHistory)
 
         elif message['isSentFromMe']:
             print("---- Message from me ----")
