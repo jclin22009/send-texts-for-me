@@ -19,11 +19,9 @@
 
 - [ ] shouldn't respond to text message reactions
 
-- [ ] THIS ONE or the next one. add multiple conversations seem to blend into one, making the model confused -- implement user parameter?
+- [ ] for each session, initialize a dictionary with the conversation thus far. Feed in this dictionary as a string into GPT each time, so that the bot is contextually aware. Hazard: ensure dictionary string size is below token limit (unlikely to exceed)
 
-- [ ] OR add previous conversations in a session into the message's prompt so the bot is CONTEXTUALLY AWARE (?)
-
-- [ ] shouldn't respond to just images
+- [ ] shouldn't respond to when only an image is sent
 
 
 ### min
