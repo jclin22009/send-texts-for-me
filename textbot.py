@@ -4,9 +4,10 @@ Port 3000 is the message sending port and 5000 is the webhook port.
 import requests
 import os
 import openai
-import string
+from rich import print
 from flask import Flask, request
 # from profanity_filter import ProfanityFilter
+
 
 def send_message(message, recipient_id):
     '''
@@ -31,20 +32,21 @@ def get_gpt_response(message):
     )
     return response.choices[0]['text']
 
-def handle_response_cycle(message, request):
+def handle_response_cycle(message, request, messageHistory):
     '''
     Prompts GPT with relevant message (especially formatting to optimize result) and
     prints the response.
     '''
-    response = get_gpt_response("Me: " + message['body'] + "\n" + "You: ")
-    # response = get_gpt_response(name + ": " + message['body'] + "\n")
-    # try:
-    #     response += request.json['sender']['givenName'] + ": "
-    # except:
-    #     response += "You: "
-    print("message: ", message['body'])
-    print("sending to: ", message['sender'])
-    print("ai response: ", response)
+    promptString = "Me: " + message['body'] + "\n" + "You: "
+    if message['sender'] in messageHistory:
+        response = get_gpt_response(messageHistory[message['sender']] + promptString)
+    else:
+        response = get_gpt_response(promptString)
+    try:
+        messageHistory[message['sender']] += "\n" + promptString + response.lstrip("\n")
+    except:
+        messageHistory[message['sender']] = "\n" + promptString.lstrip("\n") + response.lstrip("\n")
+    print("[bold]Message history: [/bold]", messageHistory, "\n")
     processed_response = clean_response(response)
     if not processed_response or processed_response == " ":
         print("*****AI response is empty*****")
@@ -52,12 +54,7 @@ def handle_response_cycle(message, request):
         send_message("AI: " + response.strip("\n"), message['sender'])
 
 def clean_response(response):
-    # response = pf.censor(response)
     return response.strip("\n")
-    # return response[:response.find("\n")]
-    # lastPunc = max(response.rfind(i) for i in "?!.")
-    # return response if lastPunc == -1 else response[:lastPunc]
-    # return response.rstrip(" .?!")
 
 app = Flask(__name__)
 @app.route('/webhook', methods=['POST'])
@@ -66,33 +63,36 @@ def webhook():
     Gets invoked whenever a message is sent to the webhook. TODO Has bug where sending messages to group chats breaks JSON syntax, as recipients
     becomes a nested item (can't just do request.json['recipient']['isMe])
     '''
+    reactStrings = ['Laughed at', 'Loved', 'Liked', 'Disliked', 'Emphasized', 'Questioned']
     if request.method == 'POST':
-        print("POST request: ", request.json)
+        print(request.json)
         print("===== Messaging detected ======")
         message = {'body': request.json['body']['message'],
             'recipient': request.json['recipient']['handle'],
             'sender': request.json['sender']['handle'],
             'isSentFromMe': request.json['sender']['isMe']}
-            
+        for item in reactStrings:
+            if message['body'].startswith(item):
+                print("Reaction detected. [italic]Skipped![/italic]")
+                return "Webhook received and ignored lol (cuz it's a reaction)" 
         if 'participants' in request.json['recipient']:
             print("---- Group chat detected ---- ")
             message['sender'] = request.json['recipient']['handle']
-            handle_response_cycle(message, request)
+            handle_response_cycle(message, request, messageHistory)
 
         elif message['isSentFromMe']:
             print("---- Message from me ----")
-            try: # TODO FOLLOWING LINE CAUSES ERROR
-                if request.json['recipient']['isMe'] \
-                    or request.json['recipient']['handle'] == "jclin2.2009@gmail.com" \
-                    or request.json['recipient']['handle'] == "+16509466066": # TODO very hacky
-                    if not message['body'].startswith('AI:'): # escape infinite response loop
-                        handle_response_cycle(message, request)
-            except:
-                pass
-
+            if request.json['recipient']['isMe'] \
+                or request.json['recipient']['handle'] == "jclin2.2009@gmail.com" \
+                or request.json['recipient']['handle'] == "+16509466066" \
+                or request.json['recipient']['handle'] == "j@sonchenl.in": # TODO very hacky
+                if not message['body'].startswith('AI:'): # escape infinite response loop
+                    handle_response_cycle(message, request, messageHistory)
+            else:
+                print("Self-sent message [italic]ignored![/italic]")
         else:
             print("---- 1 on 1 response ----")
-            handle_response_cycle(message, request)
+            handle_response_cycle(message, request, messageHistory)
         return "Webhook received!"
 
     if request.method == 'GET':
@@ -100,5 +100,5 @@ def webhook():
 
 if __name__ == '__main__':
     initialize_gpt()
-    name = input("What's your first name? ")
+    messageHistory = {}
     app.run(port=5000)
