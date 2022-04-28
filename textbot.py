@@ -4,6 +4,7 @@ Port 3000 is the message sending port and 5000 is the webhook port.
 import requests
 import os
 import openai
+import time
 from rich import print
 from flask import Flask, request
 # from profanity_filter import ProfanityFilter
@@ -14,8 +15,16 @@ def send_message(message, recipient_id):
     Sends iMessage message with Jared. Jared also allows you to attach things
     but I'm too lazy to implement that
     '''
-    r = requests.post("http://localhost:3000/message",json={"body": {"message": message}, "recipient": {"handle": recipient_id}})
-    print(r.text)
+    message_set = message.split(".")
+    for msg in message_set:
+        if not msg.startswith('AI: '):
+            msg = "AI: " + msg
+        msg = clean_response(msg)
+        if msg == "AI: ":
+            pass
+        r = requests.post("http://localhost:3000/message",json={"body": {"message": msg}, "recipient": {"handle": recipient_id}})
+        # time.sleep(len(msg) / 60) simulate typing speed
+        print(r.text)
 
 def initialize_gpt():
     openai.api_key = os.environ['OPENAI_API_KEY']

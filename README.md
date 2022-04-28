@@ -21,11 +21,13 @@
 
 - [x] for each session, initialize a dictionary with the conversation thus far. Feed in this dictionary as a string into GPT each time, so that the bot is contextually aware. Hazard: ensure dictionary string size is below token limit (unlikely to exceed)
 
+- [x] sentences delimited by period are sent as separate messages
+
 - [ ] shouldn't respond to when only an image is sent
 
-
 ### min
-- [ ] make terminal output pretty
+
+- [x] make terminal output pretty
 
 ## Quickstart
 
