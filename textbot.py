@@ -34,7 +34,7 @@ def get_gpt_response(message):
         engine="text-davinci-002", 
         prompt=message, stop="You:", 
         temperature=0.5,
-        max_tokens=100,
+        max_tokens=200,
         top_p=1.0,
         frequency_penalty=0.5,
         presence_penalty=0.0
@@ -49,24 +49,21 @@ def handle_response_cycle(message, request, messageHistory):
     promptString = "Me: " + message['body'] + "\n" + "You: "
     if message['sender'] in messageHistory:
         response = get_gpt_response(messageHistory[message['sender']] + promptString)
+        messageHistory[message['sender']] += "\n" + promptString + response.lstrip("\n")
     else:
         response = get_gpt_response(promptString)
-    try:
-        messageHistory[message['sender']] += "\n" + promptString + response.lstrip("\n")
-    except:
-        messageHistory[message['sender']] = "\n" + promptString.lstrip("\n") + response.lstrip("\n")
+        messageHistory[message['sender']] = promptString.lstrip("\n") + response.lstrip("\n")
+
     print("[bold]Message history: [/bold]", messageHistory[message['sender']], "\n")
     processed_response = clean_response(response)
-    if not processed_response or processed_response == " ":
+    
+    if not processed_response or processed_response == " ": # TODO not processed_response.strip() doesn't work?
         print("*****AI response is empty*****")
     else:
         send_message(processed_response, message['sender'])
-        # send_message(processed_response, message['sender'])
 
 def clean_response(response):
-    response = response.strip("\n")
-    response = response.strip()
-    return response
+    return response.strip("\n").strip()
 
 def should_shutup(message):
     reactStrings = ['Laughed at', 'Loved', 'Liked', 'Disliked', 'Emphasized', 'Questioned']
