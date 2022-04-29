@@ -18,7 +18,7 @@ def send_message(message, recipient_id):
     message_set = message.split(".")
     for msg in message_set:
         msg = "AI: " + msg
-        if msg != "AI: ":
+        if msg != "AI: ": # hacky workaround for empty messages TODO
             r = requests.post(
                 "http://localhost:3000/message",
                 json={"body": {"message": msg}, "recipient": {"handle": recipient_id}}
@@ -54,7 +54,7 @@ def handle_response_cycle(message, request, messageHistory):
         response = get_gpt_response(promptString)
         messageHistory[message['sender']] = promptString.lstrip("\n") + response.lstrip("\n")
 
-    print("[bold]Message history: [/bold]", messageHistory[message['sender']], "\n")
+    print("[bold]Message history:[/bold]\n", messageHistory[message['sender']])
     processed_response = clean_response(response)
     
     if not processed_response or processed_response == " ": # TODO not processed_response.strip() doesn't work?
