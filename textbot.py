@@ -17,11 +17,13 @@ def send_message(message, recipient_id):
     '''
     message_set = message.split(".")
     for msg in message_set:
-        if not msg.startswith('AI: '): # for separated successive sentences
-            msg = "AI: " + msg
+        msg = "AI: " + msg
         if msg != "AI: ":
-            r = requests.post("http://localhost:3000/message",json={"body": {"message": msg}, "recipient": {"handle": recipient_id}})
-        # time.sleep(len(msg) / 60) simulate typing speed
+            r = requests.post(
+                "http://localhost:3000/message",
+                json={"body": {"message": msg}, "recipient": {"handle": recipient_id}}
+                )
+        # time.sleep(3 + len(msg) / 5) # simulate typing speed (this assumes 300 char per minute typing speed), plus a 3-sec reading delay
         print(r.text)
 
 def initialize_gpt():
@@ -58,7 +60,7 @@ def handle_response_cycle(message, request, messageHistory):
     if not processed_response or processed_response == " ":
         print("*****AI response is empty*****")
     else:
-        send_message("AI: " + processed_response, message['sender'])
+        send_message(processed_response, message['sender'])
         # send_message(processed_response, message['sender'])
 
 def clean_response(response):
