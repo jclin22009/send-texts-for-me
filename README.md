@@ -15,7 +15,7 @@
 ### medium
 - [ ] Append messages rapidly sent to me in succession into a single message/API call
 
-- [ ] refine stop sequencing so it can stop a conversation
+- [x] refine stop sequencing so it can stop a conversation
 
 - [x] shouldn't respond to text message reactions
 
