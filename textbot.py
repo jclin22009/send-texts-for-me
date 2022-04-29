@@ -72,7 +72,11 @@ def should_shutup(message):
     reactStrings = ['Laughed at', 'Loved', 'Liked', 'Disliked', 'Emphasized', 'Questioned']
     for item in reactStrings:
         if message['body'].startswith(item):
+            print("Reaction detected. [italic]Skipped![/italic]")
             return True
+    if not message['body'].strip(): # WHY IS THIS NOT WORKING TODO
+        print("Only image detected. [italic]Skipped![/italic]")
+        return True # this means the message is just an image with nothing else
     return False
 
 app = Flask(__name__)
@@ -91,7 +95,6 @@ def webhook():
             'isSentFromMe': request.json['sender']['isMe']}
 
         if (should_shutup(message)):
-            print("Reaction detected. [italic]Skipped![/italic]")
             return "Webhook received and ignored lol (cuz it's a reaction)" 
         
         if 'participants' in request.json['recipient']:
@@ -109,6 +112,7 @@ def webhook():
                     handle_response_cycle(message, request, messageHistory)
             else:
                 print("Self-sent message [italic]ignored![/italic]")
+
         else:
             print("---- 1 on 1 response ----")
             handle_response_cycle(message, request, messageHistory)
