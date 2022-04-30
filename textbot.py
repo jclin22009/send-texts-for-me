@@ -71,7 +71,16 @@ def should_shutup(message):
         if message['body'].startswith(item):
             print("Reaction detected. [italic]Skipped![/italic]")
             return True
-    if not message['body'].strip(): # WHY IS THIS NOT WORKING TODO
+    print("unstripped: ", repr(message['body']))
+    print("stripped: ", repr(message['body'].strip())) # 😉
+    print("is empty? ", not message['body'].strip())
+    # print type of message body
+    print(message['body'])
+    print(len(message['body'].strip()))
+    print(type(message['body'].strip()))
+
+
+    if len(message['body']) == 1: # WHY IS THIS NOT WORKING TODO
         print("Only image detected. [italic]Skipped![/italic]")
         return True # this means the message is just an image with nothing else
     return False
