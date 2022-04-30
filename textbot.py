@@ -8,10 +8,26 @@ import time
 from rich import print
 from flask import Flask, request
 from dotenv import load_dotenv
+from threading import Timer
 
 load_dotenv()
 
 handles = os.environ['HANDLES'].split(', ')
+
+def send_response_delayed(handle, go):
+    lastConvo = lastConvos[handle]
+    del lastConvos[handle]
+    print("lastConvo", lastConvo)
+    response = get_gpt_response(lastConvo)
+    messageHistory[handle] += "\nYou: " + response.lstrip("\n")
+    print("[bold]Message history:[/bold]\n", messageHistory[handle])
+    processed_response = clean_response(response)
+    
+    if not processed_response or processed_response == " ": # TODO not processed_response.strip() doesn't work?
+        print("*****AI response is empty*****")
+    else:
+        send_message(processed_response, handle)
+    
 
 def send_message(message, recipient_id):
     '''
@@ -26,8 +42,8 @@ def send_message(message, recipient_id):
                 "http://localhost:3000/message",
                 json={"body": {"message": msg}, "recipient": {"handle": recipient_id}}
             )
-        # time.sleep(3 + len(msg) / 5) # simulate typing speed (this assumes 300 char per minute typing speed), plus a 3-sec reading delay
-        print(r.text)
+            # time.sleep(3 + len(msg) / 5) # simulate typing speed (this assumes 300 char per minute typing speed), plus a 3-sec reading delay
+            print(r.text)
 
 def initialize_gpt():
     openai.api_key = os.environ['OPENAI_API_KEY']
@@ -49,21 +65,20 @@ def handle_response_cycle(message, request, messageHistory):
     Prompts GPT with relevant message (especially formatting to optimize result) and
     prints the response.
     '''
-    promptString = "Me: " + message['body'] + "\n" + "You: "
-    if message['sender'] in messageHistory:
-        response = get_gpt_response(messageHistory[message['sender']] + promptString)
-        messageHistory[message['sender']] += "\n" + promptString + response.lstrip("\n")
+    if message['sender'] not in lastConvos:
+        lastConvos[message['sender']] = message['body'].lstrip("\n")
     else:
-        response = get_gpt_response(promptString)
-        messageHistory[message['sender']] = promptString.lstrip("\n") + response.lstrip("\n")
-
-    print("[bold]Message history:[/bold]\n", messageHistory[message['sender']])
-    processed_response = clean_response(response)
-    
-    if not processed_response or processed_response == " ": # TODO not processed_response.strip() doesn't work?
-        print("*****AI response is empty*****")
+        lastConvos[message['sender']] += "\n" + message['body']
+    promptString = "Me: " + message['body']
+    if message['sender'] not in messageHistory:
+        messageHistory[message['sender']] = promptString.lstrip("\n")
     else:
-        send_message(processed_response, message['sender'])
+        messageHistory[message['sender']] += "\n" + promptString
+    if message['sender'] in timers:
+        print("we cancelling out here")
+        timers[message['sender']].cancel()
+    timers[message['sender']] = Timer(5.0, send_response_delayed, (message['sender'], True))
+    timers[message['sender']].start()
 
 def clean_response(response):
     return response.strip("\n").strip()
@@ -74,7 +89,7 @@ def should_shutup(message):
         if message['body'].startswith(item):
             print("Reaction detected. [italic]Skipped![/italic]")
             return True
-    if message['body'] == "\ufffc":
+    if message['body'] == "\ufffc": # this line is a certified scott classic
         print("Only image detected. [italic]Skipped![/italic]")
         return True # this means the message is just an image with nothing else
     return False
@@ -87,10 +102,6 @@ def webhook():
     becomes a nested item (can't just do request.json['recipient']['isMe])
     '''
     if request.method == 'POST':
-        print("a", request.json)
-        f = open("output.json", "w")
-        # f.write(json.dumps(request.json, indent=2))
-        f.close()
         print("===== Messaging detected ======")
         message = {'body': request.json['body']['message'],
             'recipient': request.json['recipient']['handle'],
@@ -122,4 +133,6 @@ def webhook():
 if __name__ == '__main__':
     initialize_gpt()
     messageHistory = {}
+    lastConvos = {}
+    timers = {}
     app.run(port=5000)
