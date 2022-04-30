@@ -7,8 +7,11 @@ import openai
 import time
 from rich import print
 from flask import Flask, request
-# from profanity_filter import ProfanityFilter
+from dotenv import load_dotenv
 
+load_dotenv()
+
+handles = os.environ['HANDLES'].split(', ')
 
 def send_message(message, recipient_id):
     '''
@@ -22,7 +25,7 @@ def send_message(message, recipient_id):
             r = requests.post(
                 "http://localhost:3000/message",
                 json={"body": {"message": msg}, "recipient": {"handle": recipient_id}}
-                )
+            )
         # time.sleep(3 + len(msg) / 5) # simulate typing speed (this assumes 300 char per minute typing speed), plus a 3-sec reading delay
         print(r.text)
 
@@ -71,16 +74,7 @@ def should_shutup(message):
         if message['body'].startswith(item):
             print("Reaction detected. [italic]Skipped![/italic]")
             return True
-    print("unstripped: ", repr(message['body']))
-    print("stripped: ", repr(message['body'].strip())) # 😉
-    print("is empty? ", not message['body'].strip())
-    # print type of message body
-    print(message['body'])
-    print(len(message['body'].strip()))
-    print(type(message['body'].strip()))
-
-
-    if len(message['body']) == 1: # WHY IS THIS NOT WORKING TODO
+    if message['body'] == "\ufffc":
         print("Only image detected. [italic]Skipped![/italic]")
         return True # this means the message is just an image with nothing else
     return False
@@ -93,7 +87,10 @@ def webhook():
     becomes a nested item (can't just do request.json['recipient']['isMe])
     '''
     if request.method == 'POST':
-        print(request.json)
+        print("a", request.json)
+        f = open("output.json", "w")
+        # f.write(json.dumps(request.json, indent=2))
+        f.close()
         print("===== Messaging detected ======")
         message = {'body': request.json['body']['message'],
             'recipient': request.json['recipient']['handle'],
@@ -111,9 +108,7 @@ def webhook():
         elif message['isSentFromMe']:
             print("---- Message from me ----")
             if request.json['recipient']['isMe'] \
-                or request.json['recipient']['handle'] == "jclin2.2009@gmail.com" \
-                or request.json['recipient']['handle'] == "+16509466066" \
-                or request.json['recipient']['handle'] == "j@sonchenl.in": # TODO very hacky
+                or request.json['recipient']['handle'] in handles:
                 if not message['body'].startswith('AI:'): # escape infinite response loop
                     handle_response_cycle(message, request, messageHistory)
             else:
