@@ -10,13 +10,13 @@
 
 - [ ] Add a way to send messages to groups. NOTE: either need to use webhook or add participants to REST API call. <https://github.com/ZekeSnider/Jared/issues/58>
 
-- [ ] Add name awareness (running into bug where `name:` is printed at end of message)
-
 - [ ] build personal message dataset and fine tune
 
 ### medium
 
 - [ ] Append messages rapidly sent to me in succession into a single message/API call
+
+- [ ] Add name awareness (running into bug where `name:` is printed at end of message)
 
 - [x] refine stop sequencing so it can stop a conversation
 
@@ -26,7 +26,7 @@
 
 - [x] sentences delimited by period are sent as separate messages
 
-- [ ] shouldn't respond to when only an image is sent
+- [x] shouldn't respond to when only an image is sent
 
 ### min
 

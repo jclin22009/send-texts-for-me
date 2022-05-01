@@ -18,7 +18,7 @@ def send_message(message, recipient_id):
     Sends iMessage message with Jared. Jared also allows you to attach things
     but I'm too lazy to implement that
     '''
-    message_set = message.split(".")
+    message_set = message.split(". ")
     for msg in message_set:
         msg = "AI: " + msg
         if msg != "AI: ": # hacky workaround for empty messages TODO
