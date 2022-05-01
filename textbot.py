@@ -87,7 +87,6 @@ def webhook():
     becomes a nested item (can't just do request.json['recipient']['isMe])
     '''
     if request.method == 'POST':
-        print("a", request.json)
         f = open("output.json", "w")
         # f.write(json.dumps(request.json, indent=2))
         f.close()
