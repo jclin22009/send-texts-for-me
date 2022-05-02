@@ -15,6 +15,7 @@ const openaiConfiguration = new Configuration({
 const openai = new OpenAIApi(openaiConfiguration);
 
 const MESSAGE_HISTORY_CAP = 25;
+const RESPONSE_DELAY = 10000;
 const REACT_STRINGS = [
   'Laughed at',
   'Loved',
@@ -31,6 +32,7 @@ if (!process.env.HANDLES) {
 const HANDLES = process.env.HANDLES.split(', ');
 
 const messageHistory: Map<string, Queue<string>> = new Map();
+const messageTimers: Map<string, NodeJS.Timeout> = new Map();
 
 /**
  * Sends iMessage message with Jared. Jared also allows you to attach things
@@ -63,18 +65,21 @@ async function getGptResponse(message: string) {
   return response.data.choices?.[0].text ?? '';
 }
 
+function getMessageHistory(sender: string) {
+  let senderMessageHistory = messageHistory.get(sender);
+  if (!senderMessageHistory) {
+    senderMessageHistory = new Queue();
+    messageHistory.set(sender, senderMessageHistory);
+  }
+  return senderMessageHistory;
+}
+
 /**
  * Prompts GPT with relevant message (especially formatting to optimize result) and
  * prints the response.
  */
-async function handleResponseCycle(message: Message) {
-  let senderMessageHistory = messageHistory.get(message.sender);
-  if (!senderMessageHistory) {
-    senderMessageHistory = new Queue();
-    messageHistory.set(message.sender, senderMessageHistory);
-  }
-
-  senderMessageHistory.enqueue(`Me: ${message.body}`);
+async function handleResponseCycle(sender: string) {
+  const senderMessageHistory = getMessageHistory(sender);
   const promptString = `${Array.from(senderMessageHistory).join('\n')}\nYou: `;
   const response = (await getGptResponse(promptString)).trim();
   senderMessageHistory.enqueue(`You: ${response}`);
@@ -85,7 +90,7 @@ async function handleResponseCycle(message: Message) {
   if (!response || response === ' ') {
     console.log('*****AI response is empty*****');
   } else {
-    sendMessage(response, message.sender);
+    sendMessage(response, sender);
   }
 
   while (senderMessageHistory.length > MESSAGE_HISTORY_CAP) {
@@ -144,7 +149,17 @@ app.post('/webhook', (req, res) => {
 
   console.log('---- 1 on 1 response ----');
   console.log(req.body);
-  handleResponseCycle(message);
+  const senderMessageHistory = getMessageHistory(message.sender);
+  senderMessageHistory.enqueue(`Me: ${message.body}`);
+  const timer = messageTimers.get(message.sender);
+  if (timer) {
+    console.log('Clear timeout');
+    clearTimeout(timer);
+  }
+  messageTimers.set(
+    message.sender,
+    setTimeout(() => handleResponseCycle(message.sender), RESPONSE_DELAY)
+  );
   return res.send('Webhook received!');
 });
 
