@@ -80,7 +80,7 @@ function getMessageHistory(sender: string) {
  */
 async function handleResponseCycle(sender: string) {
   const senderMessageHistory = getMessageHistory(sender);
-  const promptString = `${Array.from(senderMessageHistory).join('\n')}\nYou: `;
+  const promptString = `${Array.from(senderMessageHistory).join('\n')}\nYou:`;
   const response = (await getGptResponse(promptString)).trim();
   senderMessageHistory.enqueue(`You: ${response}`);
   console.log(
