@@ -1,0 +1,15 @@
+{
+  "routes": {
+    "/remote": {
+      "disabled": true
+    }
+  },
+  "webhooks": [
+    {
+      "url": "http://127.0.0.1:3001/webhook"
+    }
+  ],
+  "webServer": {
+    "port": 3000
+  }
+}
