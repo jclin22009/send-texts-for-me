@@ -35,8 +35,10 @@ const messageHistory: Map<string, Queue<string>> = new Map();
 const messageTimers: Map<string, NodeJS.Timeout> = new Map();
 
 /**
- * Sends iMessage message with Jared. Jared also allows you to attach things
+ * Sends iMessage text-only messages with Jared. Jared also allows you to attach things
  * but I'm too lazy to implement that
+ * @param message the message to send
+ * @param recipientId handle of the recipient (as determined by iMessage db)
  */
 async function sendMessage(message: string, recipientId: string) {
   const messageSet = message.split('.');
@@ -52,6 +54,11 @@ async function sendMessage(message: string, recipientId: string) {
   }
 }
 
+/**
+ * Pings GPT API to receive response with custom parameters tuned for text messaging.
+ * @param message message for GPT to respond to
+ * @returns GPT response
+ */
 async function getGptResponse(message: string) {
   const response = await openai.createCompletion('text-davinci-002', {
     prompt: message,
@@ -65,6 +72,12 @@ async function getGptResponse(message: string) {
   return response.data.choices?.[0].text ?? '';
 }
 
+/**
+ * Fetches message history associated with particular user
+ * from map of message histories, or initializes a new one
+ * @param sender person who sent the message
+ * @returns queue of previous messages
+ */
 function getMessageHistory(sender: string) {
   let senderMessageHistory = messageHistory.get(sender);
   if (!senderMessageHistory) {
@@ -76,7 +89,10 @@ function getMessageHistory(sender: string) {
 
 /**
  * Prompts GPT with relevant message (especially formatting to optimize result) and
- * prints the response.
+ * prints the response. Waits for rapid successive responses from same user
+ * to maximize prompt quality (implemented by Scott, a consummate G 😎😎😎). Dequeues
+ * from senderMessageHistory queue if it's full to reduce tokens spent on GPT.
+ * @param sender person who sent the message
  */
 async function handleResponseCycle(sender: string) {
   const senderMessageHistory = getMessageHistory(sender);
@@ -98,6 +114,12 @@ async function handleResponseCycle(sender: string) {
   }
 }
 
+/**
+ * Indicates whether received message is not worth responding to (i.e.
+ * a reaction, only an image, etc.)
+ * @param message message to respond to
+ * @returns true if message is valid prompt, false otherwise
+ */
 function shouldShutup(message: Message) {
   for (const item in REACT_STRINGS) {
     if (message.body.startsWith(item)) {
@@ -106,6 +128,7 @@ function shouldShutup(message: Message) {
     }
   }
   if (message.body == '\ufffc') {
+    // this line of code is a certified Scott classic 🫡
     console.log('Only image detected. [italic]Skipped![/italic]');
     return true;
   }
