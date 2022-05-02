@@ -38,11 +38,27 @@
 
 1. Install Jared
 2. Change Jared config file (located at `~/Library/Application Support/Jared/config.json`) to the `config.json` here
-3. Activate virtual environment
-4. Add API key to your env
-5. Set up SQL
-6. Run server
-7. Run textbot and enjoy
+3. Launch Jared
+4. Install Node.js (https://nodejs.org)
+5. Install yarn using:
+
+```bash
+sudo npm i -g yarn
+```
+
+6. Install packages by typing:
+
+```bash
+yarn
+```
+
+7. Create a new file `.env` and fill in environment variables following the format of `.env.example`
+8. Set up SQL (see below)
+9. Run the textbot with:
+
+```bash
+yarn dev
+```
 
 ### Set up SQL
 
