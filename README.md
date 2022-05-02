@@ -8,13 +8,11 @@
 
 ### priority
 
-- [ ] Add a way to send messages to groups. NOTE: either need to use webhook or add participants to REST API call. <https://github.com/ZekeSnider/Jared/issues/58>
-
 - [ ] build personal message dataset and fine tune
 
 ### medium
 
-- [ ] Append messages rapidly sent to me in succession into a single message/API call
+- [x] Append messages rapidly sent to me in succession into a single message/API call
 
 - [ ] Add name awareness (running into bug where `name:` is printed at end of message)
 
@@ -31,6 +29,8 @@
 ### min
 
 - [x] make terminal output pretty
+
+- [ ] Add a way to send messages to groups. NOTE: either need to use webhook or add participants to REST API call. <https://github.com/ZekeSnider/Jared/issues/58>
 
 ## Quickstart
 
