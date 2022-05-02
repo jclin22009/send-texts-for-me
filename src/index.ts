@@ -1,6 +1,7 @@
 import axios from 'axios';
 import express from 'express';
 import { Configuration, OpenAIApi } from 'openai';
+import { Queue } from 'queue-typescript';
 
 interface Message {
   sender: string;
@@ -13,6 +14,7 @@ const openaiConfiguration = new Configuration({
 });
 const openai = new OpenAIApi(openaiConfiguration);
 
+const MESSAGE_HISTORY_CAP = 25;
 const REACT_STRINGS = [
   'Laughed at',
   'Loved',
@@ -28,7 +30,7 @@ if (!process.env.HANDLES) {
 
 const HANDLES = process.env.HANDLES.split(', ');
 
-const messageHistory: Map<string, string> = new Map();
+const messageHistory: Map<string, Queue<string>> = new Map();
 
 /**
  * Sends iMessage message with Jared. Jared also allows you to attach things
@@ -66,31 +68,28 @@ async function getGptResponse(message: string) {
  * prints the response.
  */
 async function handleResponseCycle(message: Message) {
-  const promptString = `Me: ${message.body}\nYou: `;
-  const senderMessageHistory = messageHistory.get(message.sender);
-  let response: string;
-  if (senderMessageHistory) {
-    response = await getGptResponse(`${senderMessageHistory}${promptString}`);
-    messageHistory.set(
-      message.sender,
-      `\n${promptString}${response.trimStart()}`
-    );
-  } else {
-    response = await getGptResponse(promptString);
-    messageHistory.set(
-      message.sender,
-      `${promptString.trimStart()}${response.trimStart()}`
-    );
+  let senderMessageHistory = messageHistory.get(message.sender);
+  if (!senderMessageHistory) {
+    senderMessageHistory = new Queue();
+    messageHistory.set(message.sender, senderMessageHistory);
   }
+
+  senderMessageHistory.enqueue(`Me: ${message.body}`);
+  const promptString = `${Array.from(senderMessageHistory).join('\n')}\nYou: `;
+  const response = (await getGptResponse(promptString)).trim();
+  senderMessageHistory.enqueue(`You: ${response}`);
   console.log(
     '[bold]Message history:[/bold]\n',
-    messageHistory.get(message.sender)
+    Array.from(senderMessageHistory).join('\n')
   );
-  const processedResponse = response.trim();
-  if (!processedResponse || processedResponse == ' ') {
+  if (!response || response === ' ') {
     console.log('*****AI response is empty*****');
   } else {
-    sendMessage(processedResponse, message['sender']);
+    sendMessage(response, message.sender);
+  }
+
+  while (senderMessageHistory.length > MESSAGE_HISTORY_CAP) {
+    senderMessageHistory.dequeue();
   }
 }
 
