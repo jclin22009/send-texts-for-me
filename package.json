@@ -1,0 +1,46 @@
+{
+  "name": "sends-texts-for-me",
+  "version": "1.0.0",
+  "description": "Send texts for me",
+  "main": "index.js",
+  "scripts": {
+    "dev": "ts-node-dev --project tsconfig.json --require dotenv-safe/config src/index.ts dotenv_config_path=.env",
+    "test": "jest",
+    "build": "tsc --project tsconfig.json",
+    "start": "node --require dotenv-safe/config dist/index.js dotenv_config_path=.env"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jclin22009/send-texts-for-me.git"
+  },
+  "author": "Crothers",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jclin22009/send-texts-for-me/issues"
+  },
+  "homepage": "https://github.com/jclin22009/send-texts-for-me#readme",
+  "dependencies": {
+    "@noble/ed25519": "^1.6.0",
+    "axios": "^0.27.2",
+    "dotenv-safe": "^8.2.0",
+    "express": "^4.18.1",
+    "openai": "^2.0.5"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.16.11",
+    "@babel/preset-typescript": "^7.16.7",
+    "@types/express": "^4.17.13",
+    "@types/jest": "^27.4.1",
+    "@types/node": "^17.0.23",
+    "@typescript-eslint/eslint-plugin": "^5.7.0",
+    "@typescript-eslint/parser": "^5.17.0",
+    "eslint": "^8.5.0",
+    "eslint-config-prettier": "^8.1.0",
+    "eslint-plugin-prettier": "^3.3.1",
+    "eslint-plugin-simple-import-sort": "^7.0.0",
+    "jest": "^27.5.1",
+    "prettier": "^2.5.1",
+    "ts-node-dev": "^1.1.8",
+    "typescript": "^4.5.4"
+  }
+}
