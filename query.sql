@@ -42,9 +42,10 @@ WHERE pr.id + 1 = com.id
 AND NOT pr.is_from_me
 AND com.is_from_me
 AND pr.person = com.person
-AND (length(pr.content) != 1 OR unicode(pr.content) != 65532)
-AND unicode(com.content) != 65532
 AND NOT (
+pr.content LIKE '%￼%'
+OR com.content LIKE '%￼%'
+OR
 pr.content LIKE 'Loved%'
 OR pr.content LIKE '%|Loved%'
 OR com.content LIKE 'Loved%'

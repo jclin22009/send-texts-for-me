@@ -13,6 +13,8 @@
 
 ### medium
 
+- [x] Filter messages that contain images
+
 - [x] Append messages rapidly sent to me in succession into a single message/API call
 
 - [ ] Add name awareness (running into bug where `name:` is printed at end of message)
