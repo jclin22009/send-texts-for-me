@@ -9,9 +9,6 @@
 ### priority
 
 - [ ] build personal message dataset and fine tune
-	* Which messages do we want to use for fine tuning? Include synthetic data?
-		- Filter by time
-	* Data for fine-tuning should be in the format "Me: XX \n You: XX"
 	* Include context in fine-tuning data
 
 ### medium
@@ -72,4 +69,12 @@ yarn dev
 
 ```bash
 cat query.sql | sqlite3 chat.db -csv -header > output.csv
+```
+
+4. Use Google Sheets utility to convert output.csv into the correct format
+
+5. If adding synthetic data, add it in a file `synthetic.csv` in the same format as `output.csv`, and run the following command:
+
+```bash
+tail -n+2 -q synthetic.csv >> output.csv
 ```
