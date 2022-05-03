@@ -9,6 +9,10 @@
 ### priority
 
 - [ ] build personal message dataset and fine tune
+	* Which messages do we want to use for fine tuning? Include synthetic data?
+		- Filter by time
+	* Data for fine-tuning should be in the format "Me: XX \n You: XX"
+	* Include context in fine-tuning data
 
 ### medium
 

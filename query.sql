@@ -15,7 +15,10 @@ WHERE
 	chat.chat_identifier LIKE '+%'
 -- Optional: Filter to one specific conversation
 -- AND
--- 	chat.chat_identifier = '[NUMBER]'
+ 	-- chat.chat_identifier = '[NUMBER]'
+-- Optional: Filter by date
+-- AND
+	-- message.date > 1000000000 * (strftime('%s', '2021-09-20') - strftime('%s', '2001-01-01'))
 ORDER BY
     chat.chat_identifier, message_date
 )
