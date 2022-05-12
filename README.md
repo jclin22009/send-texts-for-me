@@ -8,8 +8,11 @@
 
 ### priority
 
-- [ ] build personal message dataset and fine tune
-	* Include context in fine-tuning data
+- [x] build personal message dataset
+
+  - Include context in fine-tuning data
+
+- [ ] fine tune with data set
 
 ### medium
 
@@ -80,3 +83,7 @@ cat query.sql | sqlite3 chat.db -csv -header > output.csv
 ```bash
 tail -n+2 -q synthetic.csv >> output.csv
 ```
+
+### Notes
+
+- under typescript version, self-message conversation exchanges don't work on certain devices (depending on how iMessage accounts are configured). If not working, try sending to an associated account not under ths ame contact

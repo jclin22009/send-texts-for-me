@@ -15,7 +15,7 @@ const openaiConfiguration = new Configuration({
 const openai = new OpenAIApi(openaiConfiguration);
 
 const MESSAGE_HISTORY_CAP = 25;
-const RESPONSE_DELAY = 10000;
+const RESPONSE_DELAY = 1000;
 const REACT_STRINGS = [
   'Laughed at',
   'Loved',
