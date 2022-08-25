@@ -111,3 +111,10 @@ peers/
 
 # Database files
 databases/
+.profile
+chat.db
+chat.db-shm
+chat.db-wal
+output.csv
+package.json
+yarn.lock
