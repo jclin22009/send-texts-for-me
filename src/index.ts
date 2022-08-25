@@ -15,7 +15,7 @@ const openaiConfiguration = new Configuration({
 const openai = new OpenAIApi(openaiConfiguration);
 
 const MESSAGE_HISTORY_CAP = 25;
-const RESPONSE_DELAY = 1000;
+const RESPONSE_DELAY = 0;
 const REACT_STRINGS = [
   'Laughed at',
   'Loved',
@@ -121,8 +121,8 @@ async function handleResponseCycle(sender: string) {
  * @returns true if message is valid prompt, false otherwise
  */
 function shouldShutup(message: Message) {
-  for (const item in REACT_STRINGS) {
-    if (message.body.startsWith(item)) {
+  for (let i = 0; i < REACT_STRINGS.length; i++) {
+    if (message.body.startsWith(REACT_STRINGS[i])) {
       console.log('Reaction detected. [italic]Skipped![/italic]');
       return true;
     }
