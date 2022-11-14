@@ -1,7 +1,10 @@
+import { utils } from '@noble/ed25519';
 import axios from 'axios';
+import { time } from 'console';
 import express from 'express';
 import { Configuration, OpenAIApi } from 'openai';
 import { Queue } from 'queue-typescript';
+import { delay } from './util';
 
 interface Message {
   sender: string;
@@ -15,7 +18,7 @@ const openaiConfiguration = new Configuration({
 const openai = new OpenAIApi(openaiConfiguration);
 
 const MESSAGE_HISTORY_CAP = 25;
-const RESPONSE_DELAY = 0;
+const RESPONSE_DELAY = 5000; // in ms
 const REACT_STRINGS = [
   'Laughed at',
   'Loved',
@@ -44,7 +47,8 @@ async function sendMessage(message: string, recipientId: string) {
   const messageSet = message.split('.');
   for (const rawMessage of messageSet) {
     if (rawMessage) {
-      const message = `AI: ${rawMessage}`;
+      const message = `${rawMessage.trim()}`;
+      // const message = `AI: ${rawMessage.trim()}`;
       const response = await axios.post('http://localhost:3000/message', {
         body: { message },
         recipient: { handle: recipientId }
@@ -59,17 +63,24 @@ async function sendMessage(message: string, recipientId: string) {
  * @param message message for GPT to respond to
  * @returns GPT response
  */
+
+//     'davinci:ft-personal-2022-10-02-20-52-40',
 async function getGptResponse(message: string) {
   const response = await openai.createCompletion('text-davinci-002', {
     prompt: message,
-    stop: 'You:',
+    stop: 'me:',
     temperature: 0.5,
     max_tokens: 200,
     top_p: 1.0,
     frequency_penalty: 0.5,
     presence_penalty: 0.0
   });
-  return response.data.choices?.[0].text ?? '';
+  // print response
+  const resultUncleaned = (response.data.choices?.[0].text ?? '').trim();
+  const resultCleaned = resultUncleaned
+    .split('\n')
+    .map((response) => response.replace('you:', '').trim());
+  return resultCleaned;
 }
 
 /**
@@ -96,19 +107,22 @@ function getMessageHistory(sender: string) {
  */
 async function handleResponseCycle(sender: string) {
   const senderMessageHistory = getMessageHistory(sender);
-  const promptString = `${Array.from(senderMessageHistory).join('\n')}\nYou:`;
-  const response = (await getGptResponse(promptString)).trim();
-  senderMessageHistory.enqueue(`You: ${response}`);
-  console.log(
-    '[bold]Message history:[/bold]\n',
-    Array.from(senderMessageHistory).join('\n')
-  );
-  if (!response || response === ' ') {
-    console.log('*****AI response is empty*****');
-  } else {
-    sendMessage(response, sender);
-  }
+  const promptString = `${Array.from(senderMessageHistory).join('\n')}\nyou:`;
+  const responses = await getGptResponse(promptString);
+  senderMessageHistory.enqueue(`you: ${responses.join('. ')}`);
+  for (const response of responses) {
+    await delay(3000);
 
+    console.log(
+      '[bold]Message history:[/bold]\n',
+      Array.from(senderMessageHistory).join('\n')
+    );
+    if (!response || response === ' ') {
+      console.log('*****AI response is empty*****');
+    } else {
+      sendMessage(response, sender);
+    }
+  }
   while (senderMessageHistory.length > MESSAGE_HISTORY_CAP) {
     senderMessageHistory.dequeue();
   }
@@ -173,7 +187,7 @@ app.post('/webhook', (req, res) => {
   console.log('---- 1 on 1 response ----');
   console.log(req.body);
   const senderMessageHistory = getMessageHistory(message.sender);
-  senderMessageHistory.enqueue(`Me: ${message.body}`);
+  senderMessageHistory.enqueue(`me: ${message.body}`);
   const timer = messageTimers.get(message.sender);
   if (timer) {
     console.log('Clear timeout');
