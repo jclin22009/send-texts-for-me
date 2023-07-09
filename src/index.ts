@@ -49,9 +49,10 @@ async function sendMessage(message: string, recipientId: string) {
   const messageSet = message.split('.');
   for (const rawMessage of messageSet) {
     if (rawMessage) {
-      const message = `${rawMessage.trim()}`;
-      // const message = `AI: ${rawMessage.trim()}`;
-      const response = await axios.post('http://localhost:3000/message', {
+      // const message = `${rawMessage.trim()}`;
+      const message = `AI: ${rawMessage.trim()}`;
+      // use API webserver to post (webhook is only for receiving)
+      const response = await axios.post('http://localhost:3005/message', {
         body: { message },
         recipient: { handle: recipientId }
       });
@@ -154,6 +155,9 @@ function shouldShutup(message: InboundMessage) {
   return false;
 }
 
+console.log("let's first send a text to make sure this works");
+sendMessage('hi', '+16509466066');
+
 const app = express();
 app.use(express.json());
 
@@ -207,4 +211,5 @@ app.post('/webhook', (req, res) => {
 });
 
 console.log('***Starting server***');
-app.listen(3001);
+// jared config webhook port
+app.listen(3069);
