@@ -1,12 +1,11 @@
-import { utils } from '@noble/ed25519';
 import axios from 'axios';
-import { time } from 'console';
 import express from 'express';
-import { Configuration, OpenAIApi } from 'openai';
+import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from 'openai';
 import { Queue } from 'queue-typescript';
+
 import { delay } from './util';
 
-interface Message {
+interface InboundMessage {
   sender: string;
   recipient: string;
   body: string;
@@ -34,7 +33,10 @@ if (!process.env.HANDLES) {
 
 const HANDLES = process.env.HANDLES.split(', ');
 
-const messageHistory: Map<string, Queue<string>> = new Map();
+const messageHistory: Map<
+  string,
+  Queue<ChatCompletionRequestMessage>
+> = new Map();
 const messageTimers: Map<string, NodeJS.Timeout> = new Map();
 
 /**
@@ -65,22 +67,25 @@ async function sendMessage(message: string, recipientId: string) {
  */
 
 //     'davinci:ft-personal-2022-10-02-20-52-40',
-async function getGptResponse(message: string) {
-  const response = await openai.createCompletion('text-davinci-002', {
-    prompt: message,
-    stop: 'me:',
-    temperature: 0.5,
-    max_tokens: 200,
-    top_p: 1.0,
-    frequency_penalty: 0.5,
-    presence_penalty: 0.0
+async function getGptResponse(
+  messageHistoryQueue: Queue<ChatCompletionRequestMessage>
+) {
+  const messages = messageHistoryQueue.toArray();
+  const response = await openai.createChatCompletion({
+    model: 'gpt-3.5-turbo',
+    messages: [
+      ...messages,
+      {
+        role: 'system',
+        content:
+          "you're texting your friends. your name is Jason, you go to stanford for computer science (human-computer interaction), and this summer you are working at a startup at y combinator. you are laid back and like to run, make videos, take photos, and build cool projects. you text casually (all lower case, short phrases, but really nice. generally, prefer asking the other person about their life, rather than talking about yourself). respond to the following text thread as jason would, or don't reply if a reply seems unnecessary (the conversation ended)."
+      }
+    ]
   });
-  // print response
-  const resultUncleaned = (response.data.choices?.[0].text ?? '').trim();
-  const resultCleaned = resultUncleaned
-    .split('\n')
-    .map((response) => response.replace('you:', '').trim());
-  return resultCleaned;
+  if (response.data.choices === undefined) {
+    console.log('*****AI response is empty*****'); // todo probably rare
+  }
+  return response.data.choices[0].message; // array of strings
 }
 
 /**
@@ -107,22 +112,22 @@ function getMessageHistory(sender: string) {
  */
 async function handleResponseCycle(sender: string) {
   const senderMessageHistory = getMessageHistory(sender);
-  const promptString = `${Array.from(senderMessageHistory).join('\n')}\nyou:`;
-  const responses = await getGptResponse(promptString);
-  senderMessageHistory.enqueue(`you: ${responses.join('. ')}`);
-  for (const response of responses) {
-    await delay(3000);
+  const response = await getGptResponse(senderMessageHistory);
+  if (!response) return;
+  const text = response.content;
+  senderMessageHistory.enqueue(response);
 
-    console.log(
-      '[bold]Message history:[/bold]\n',
-      Array.from(senderMessageHistory).join('\n')
-    );
-    if (!response || response === ' ') {
-      console.log('*****AI response is empty*****');
-    } else {
-      sendMessage(response, sender);
-    }
+  await delay(3000);
+  console.log(
+    '[bold]Message history:[/bold]\n',
+    Array.from(senderMessageHistory).join('\n')
+  );
+  if (!text || text === ' ') {
+    console.log('*****AI response is empty*****'); // idk if still needed
+  } else {
+    sendMessage(text, sender);
   }
+
   while (senderMessageHistory.length > MESSAGE_HISTORY_CAP) {
     senderMessageHistory.dequeue();
   }
@@ -134,7 +139,7 @@ async function handleResponseCycle(sender: string) {
  * @param message message to respond to
  * @returns true if message is valid prompt, false otherwise
  */
-function shouldShutup(message: Message) {
+function shouldShutup(message: InboundMessage) {
   for (let i = 0; i < REACT_STRINGS.length; i++) {
     if (message.body.startsWith(REACT_STRINGS[i])) {
       console.log('Reaction detected. [italic]Skipped![/italic]');
@@ -160,7 +165,7 @@ app.post('/webhook', (req, res) => {
     return res.send('Webhook received and ignored for group chat');
   }
 
-  const message: Message = {
+  const message: InboundMessage = {
     sender: req.body.sender.handle,
     recipient: req.body.recipient.handle,
     body: req.body.body.message
@@ -187,11 +192,12 @@ app.post('/webhook', (req, res) => {
   console.log('---- 1 on 1 response ----');
   console.log(req.body);
   const senderMessageHistory = getMessageHistory(message.sender);
-  senderMessageHistory.enqueue(`me: ${message.body}`);
+  senderMessageHistory.enqueue({ role: 'user', content: message.body });
+  // scott's very nice timing code that i don't understand yet but will soon
   const timer = messageTimers.get(message.sender);
   if (timer) {
     console.log('Clear timeout');
-    clearTimeout(timer);
+    clearTimeout(timer); // todo understand this
   }
   messageTimers.set(
     message.sender,
@@ -200,4 +206,5 @@ app.post('/webhook', (req, res) => {
   return res.send('Webhook received!');
 });
 
+console.log('***Starting server***');
 app.listen(3001);
