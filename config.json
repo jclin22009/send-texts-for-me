@@ -6,10 +6,10 @@
   },
   "webhooks": [
     {
-      "url": "http://127.0.0.1:3001/webhook"
+      "url": "http://127.0.0.1:3069/webhook"
     }
   ],
   "webServer": {
-    "port": 3000
+    "port": 3005
   }
 }

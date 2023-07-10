@@ -1,12 +1,11 @@
-import { utils } from '@noble/ed25519';
 import axios from 'axios';
-import { time } from 'console';
 import express from 'express';
-import { Configuration, OpenAIApi } from 'openai';
+import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from 'openai';
 import { Queue } from 'queue-typescript';
+
 import { delay } from './util';
 
-interface Message {
+interface InboundMessage {
   sender: string;
   recipient: string;
   body: string;
@@ -18,7 +17,7 @@ const openaiConfiguration = new Configuration({
 const openai = new OpenAIApi(openaiConfiguration);
 
 const MESSAGE_HISTORY_CAP = 25;
-const RESPONSE_DELAY = 5000; // in ms
+const RESPONSE_DELAY = 6000; // in ms
 const REACT_STRINGS = [
   'Laughed at',
   'Loved',
@@ -34,7 +33,10 @@ if (!process.env.HANDLES) {
 
 const HANDLES = process.env.HANDLES.split(', ');
 
-const messageHistory: Map<string, Queue<string>> = new Map();
+const messageHistory: Map<
+  string,
+  Queue<ChatCompletionRequestMessage>
+> = new Map();
 const messageTimers: Map<string, NodeJS.Timeout> = new Map();
 
 /**
@@ -44,16 +46,19 @@ const messageTimers: Map<string, NodeJS.Timeout> = new Map();
  * @param recipientId handle of the recipient (as determined by iMessage db)
  */
 async function sendMessage(message: string, recipientId: string) {
+  message = message.toLowerCase();
   const messageSet = message.split('.');
   for (const rawMessage of messageSet) {
+    await delay(5000);
     if (rawMessage) {
       const message = `${rawMessage.trim()}`;
       // const message = `AI: ${rawMessage.trim()}`;
-      const response = await axios.post('http://localhost:3000/message', {
+      // use API webserver to post (webhook is only for receiving)
+      const response = await axios.post('http://localhost:3005/message', {
         body: { message },
         recipient: { handle: recipientId }
       });
-      console.log(response.data);
+      // console.log('Sent message data: ', response.data);
     }
   }
 }
@@ -65,22 +70,28 @@ async function sendMessage(message: string, recipientId: string) {
  */
 
 //     'davinci:ft-personal-2022-10-02-20-52-40',
-async function getGptResponse(message: string) {
-  const response = await openai.createCompletion('text-davinci-002', {
-    prompt: message,
-    stop: 'me:',
-    temperature: 0.5,
-    max_tokens: 200,
-    top_p: 1.0,
-    frequency_penalty: 0.5,
-    presence_penalty: 0.0
+async function getGptResponse(
+  messageHistoryQueue: Queue<ChatCompletionRequestMessage>
+) {
+  const messages = messageHistoryQueue.toArray();
+  const response = await openai.createChatCompletion({
+    model: 'gpt-4',
+    messages: [
+      {
+        role: 'system',
+        content:
+          "Your name is Jason. You're a college student at Stanford. Respond to these texts in the diction and phrasing of a college student (so casual). Be nice and concise (texting language). I usually text like this: if someone says 'hey', i'll say 'what's up'"
+      },
+      ...messages
+    ]
   });
-  // print response
-  const resultUncleaned = (response.data.choices?.[0].text ?? '').trim();
-  const resultCleaned = resultUncleaned
-    .split('\n')
-    .map((response) => response.replace('you:', '').trim());
-  return resultCleaned;
+  if (
+    response.data.choices === undefined ||
+    response.data.choices.length === 0
+  ) {
+    console.log('*****AI response is empty*****'); // todo probably rare
+  }
+  return response.data.choices[0].message; // array of strings
 }
 
 /**
@@ -107,22 +118,24 @@ function getMessageHistory(sender: string) {
  */
 async function handleResponseCycle(sender: string) {
   const senderMessageHistory = getMessageHistory(sender);
-  const promptString = `${Array.from(senderMessageHistory).join('\n')}\nyou:`;
-  const responses = await getGptResponse(promptString);
-  senderMessageHistory.enqueue(`you: ${responses.join('. ')}`);
-  for (const response of responses) {
-    await delay(3000);
+  const response = await getGptResponse(senderMessageHistory);
+  if (!response) return;
+  const text = response.content;
+  senderMessageHistory.enqueue(response);
 
-    console.log(
-      '[bold]Message history:[/bold]\n',
-      Array.from(senderMessageHistory).join('\n')
-    );
-    if (!response || response === ' ') {
-      console.log('*****AI response is empty*****');
-    } else {
-      sendMessage(response, sender);
-    }
+  await delay(3000);
+  console.log(
+    '[bold]Message history:[/bold]\n',
+    Array.from(senderMessageHistory).map(
+      (message) => `${message.role}: ${message.content} \n)`
+    )
+  );
+  if (!text || text === ' ') {
+    console.log('*****AI response is empty*****'); // idk if still needed
+  } else {
+    sendMessage(text, sender);
   }
+
   while (senderMessageHistory.length > MESSAGE_HISTORY_CAP) {
     senderMessageHistory.dequeue();
   }
@@ -134,7 +147,7 @@ async function handleResponseCycle(sender: string) {
  * @param message message to respond to
  * @returns true if message is valid prompt, false otherwise
  */
-function shouldShutup(message: Message) {
+function shouldShutup(message: InboundMessage) {
   for (let i = 0; i < REACT_STRINGS.length; i++) {
     if (message.body.startsWith(REACT_STRINGS[i])) {
       console.log('Reaction detected. [italic]Skipped![/italic]');
@@ -149,6 +162,9 @@ function shouldShutup(message: Message) {
   return false;
 }
 
+console.log('***Building text-bot***');
+sendMessage('Text bot built!', '+16509466066');
+
 const app = express();
 app.use(express.json());
 
@@ -160,7 +176,7 @@ app.post('/webhook', (req, res) => {
     return res.send('Webhook received and ignored for group chat');
   }
 
-  const message: Message = {
+  const message: InboundMessage = {
     sender: req.body.sender.handle,
     recipient: req.body.recipient.handle,
     body: req.body.body.message
@@ -187,11 +203,12 @@ app.post('/webhook', (req, res) => {
   console.log('---- 1 on 1 response ----');
   console.log(req.body);
   const senderMessageHistory = getMessageHistory(message.sender);
-  senderMessageHistory.enqueue(`me: ${message.body}`);
+  senderMessageHistory.enqueue({ role: 'user', content: message.body });
+  // scott's very nice timing code that i don't understand yet but will soon
   const timer = messageTimers.get(message.sender);
   if (timer) {
     console.log('Clear timeout');
-    clearTimeout(timer);
+    clearTimeout(timer); // todo understand this
   }
   messageTimers.set(
     message.sender,
@@ -200,4 +217,6 @@ app.post('/webhook', (req, res) => {
   return res.send('Webhook received!');
 });
 
-app.listen(3001);
+console.log('***Starting server***');
+// jared config webhook port
+app.listen(3069);
