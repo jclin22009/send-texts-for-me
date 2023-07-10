@@ -17,7 +17,7 @@ const openaiConfiguration = new Configuration({
 const openai = new OpenAIApi(openaiConfiguration);
 
 const MESSAGE_HISTORY_CAP = 25;
-const RESPONSE_DELAY = 5000; // in ms
+const RESPONSE_DELAY = 6000; // in ms
 const REACT_STRINGS = [
   'Laughed at',
   'Loved',
@@ -46,17 +46,19 @@ const messageTimers: Map<string, NodeJS.Timeout> = new Map();
  * @param recipientId handle of the recipient (as determined by iMessage db)
  */
 async function sendMessage(message: string, recipientId: string) {
+  message = message.toLowerCase();
   const messageSet = message.split('.');
   for (const rawMessage of messageSet) {
+    await delay(5000);
     if (rawMessage) {
-      // const message = `${rawMessage.trim()}`;
-      const message = `AI: ${rawMessage.trim()}`;
+      const message = `${rawMessage.trim()}`;
+      // const message = `AI: ${rawMessage.trim()}`;
       // use API webserver to post (webhook is only for receiving)
       const response = await axios.post('http://localhost:3005/message', {
         body: { message },
         recipient: { handle: recipientId }
       });
-      console.log(response.data);
+      // console.log('Sent message data: ', response.data);
     }
   }
 }
@@ -73,17 +75,20 @@ async function getGptResponse(
 ) {
   const messages = messageHistoryQueue.toArray();
   const response = await openai.createChatCompletion({
-    model: 'gpt-3.5-turbo',
+    model: 'gpt-4',
     messages: [
-      ...messages,
       {
         role: 'system',
         content:
-          "you're texting your friends. your name is Jason, you go to stanford for computer science (human-computer interaction), and this summer you are working at a startup at y combinator. you are laid back and like to run, make videos, take photos, and build cool projects. you text casually (all lower case, short phrases, but really nice. generally, prefer asking the other person about their life, rather than talking about yourself). respond to the following text thread as jason would, or don't reply if a reply seems unnecessary (the conversation ended)."
-      }
+          "Your name is Jason. You're a college student at Stanford. Respond to these texts in the diction and phrasing of a college student (so casual). Be nice and concise (texting language). I usually text like this: if someone says 'hey', i'll say 'what's up'"
+      },
+      ...messages
     ]
   });
-  if (response.data.choices === undefined) {
+  if (
+    response.data.choices === undefined ||
+    response.data.choices.length === 0
+  ) {
     console.log('*****AI response is empty*****'); // todo probably rare
   }
   return response.data.choices[0].message; // array of strings
@@ -121,7 +126,9 @@ async function handleResponseCycle(sender: string) {
   await delay(3000);
   console.log(
     '[bold]Message history:[/bold]\n',
-    Array.from(senderMessageHistory).join('\n')
+    Array.from(senderMessageHistory).map(
+      (message) => `${message.role}: ${message.content} \n)`
+    )
   );
   if (!text || text === ' ') {
     console.log('*****AI response is empty*****'); // idk if still needed
@@ -155,8 +162,8 @@ function shouldShutup(message: InboundMessage) {
   return false;
 }
 
-console.log("let's first send a text to make sure this works");
-sendMessage('hi', '+16509466066');
+console.log('***Building text-bot***');
+sendMessage('Text bot built!', '+16509466066');
 
 const app = express();
 app.use(express.json());

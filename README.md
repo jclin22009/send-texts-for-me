@@ -6,7 +6,7 @@
 
 # What is this?
 
-This app is an experiment. It responds to your texts for you — it detects your iMessage texts and replies to them on your behalf. Some cool features include: 
+This experimental app detects your iMessage texts and replies to them on your behalf. Some cool features include: 
 
 - Message sending delay (so it doesn't reply too quick)
 - Text processing (to make messages more casual)
@@ -14,35 +14,6 @@ This app is an experiment. It responds to your texts for you — it detects your
 - Swap out ChatGPT for a fine-tuned version on your own text messages, so it can talk even more similarly to you!
 
 Please be responsible with usage and receive the informed consent of your friends before deploying!
-
-## TODO
-
-### priority
-
-- [x] build personal message dataset
-
-   - Include context in fine-tuning data
-
-- [ ] fine tune with data set
-
-### medium
-
-- [x] Filter messages that contain images
-- [x] Append messages rapidly sent to me in succession into a single message/API call
-- [x] refine stop sequencing so it can stop a conversation
-- [x] shouldn't respond to text message reactions
-- [x] for each session, initialize a dictionary with the conversation thus far. Feed in this dictionary as a string into GPT each time, so that the bot is contextually aware. Hazard: ensure dictionary string size is below token limit (unlikely to exceed)
-- [x] sentences delimited by period are sent as separate messages
-- [x] shouldn't respond to when only an image is sent
-
-### min
-
-- [x] make terminal output pretty
-- [x] Add a way to send messages to groups. NOTE: either need to use webhook or add participants to REST API call. <https://github.com/ZekeSnider/Jared/issues/58>
-
-### abandoned
-
-- [ ] Add name awareness (running into bug where `name:` is printed at end of message)
 
 ## Quickstart
 
@@ -52,19 +23,19 @@ Please be responsible with usage and receive the informed consent of your friend
 2. Change Jared config file (located at `~/Library/Application Support/Jared/config.json`) to the `config.json` here
 3. Launch Jared
 4. Install Node.js (https://nodejs.org)
-5. Install yarn using:
+5. If you don't have it, install yarn using:
 
 ```bash
 sudo npm i -g yarn
 ```
 
-6. Install packages by typing:
+6. Open this directory (`cd send-texts-for-me`), then install packages by typing:
 
 ```bash
 yarn
 ```
 
-7. Create a new file `.env` and fill in environment variables following the format of `.env.example`
+7. Create a new file `.env` and fill in environment variables following the format of `.env.example`. Get your OpenAI API key at platform.openai.com
 8. Set up SQL (see below)
 9. Run the textbot with:
 
