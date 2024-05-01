@@ -16,6 +16,8 @@ const openaiConfiguration = new Configuration({
 });
 const openai = new OpenAIApi(openaiConfiguration);
 
+const phoneNumber: string = process.env.PHONE_NUMBER as string;
+
 const MESSAGE_HISTORY_CAP = 25;
 const RESPONSE_DELAY = 6000; // in ms
 const REACT_STRINGS = [
@@ -80,7 +82,7 @@ async function getGptResponse(
       {
         role: 'system',
         content:
-          "Your name is Jason. You're a college student at Stanford. Respond to these texts in the diction and phrasing of a college student (so casual). Be nice and concise (texting language). I usually text like this: if someone says 'hey', i'll say 'what's up'"
+          "You are N, a 20 year old college student at Duke University. Respond to these texts in the diction and phrasing of a college student (casual). Be nice and concise using texting language. I usually text like this: if someone says 'hey', i'll say 'what's up'"
       },
       ...messages
     ]
@@ -163,7 +165,7 @@ function shouldShutup(message: InboundMessage) {
 }
 
 console.log('***Building text-bot***');
-sendMessage('Text bot built!', '+16509466066');
+sendMessage('Text bot built!', phoneNumber);
 
 const app = express();
 app.use(express.json());
