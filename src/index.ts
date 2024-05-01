@@ -84,7 +84,7 @@ async function getGptResponse(
     content: message.content || ''
   }));
   const response = await openai.chat.completions.create({
-    model: 'gpt-4-turbo',
+    model: 'ft:gpt-3.5-turbo-0125:personal::9K82z2Nu',
     messages: [
       {
         name: 'N',
