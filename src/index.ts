@@ -1,7 +1,8 @@
 import axios from 'axios';
 import express from 'express';
-import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from 'openai';
 import { Queue } from 'queue-typescript';
+import OpenAI from 'openai';
+import { ChatCompletionCreateParamsBase } from 'openai/src/resources/chat/completions';
 
 import { delay } from './util';
 
@@ -11,10 +12,9 @@ interface InboundMessage {
   body: string;
 }
 
-const openaiConfiguration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY
-});
-const openai = new OpenAIApi(openaiConfiguration);
+const openai = new OpenAI();
+
+const phoneNumber: string = process.env.PHONE_NUMBER as string;
 
 const MESSAGE_HISTORY_CAP = 25;
 const RESPONSE_DELAY = 6000; // in ms
@@ -33,9 +33,14 @@ if (!process.env.HANDLES) {
 
 const HANDLES = process.env.HANDLES.split(', ');
 
+const userMessage = {
+  role: 'user',
+  content: 'Your message content here'
+};
+
 const messageHistory: Map<
   string,
-  Queue<ChatCompletionRequestMessage>
+  Queue<{ role: string; content: string }>
 > = new Map();
 const messageTimers: Map<string, NodeJS.Timeout> = new Map();
 
@@ -71,27 +76,35 @@ async function sendMessage(message: string, recipientId: string) {
 
 //     'davinci:ft-personal-2022-10-02-20-52-40',
 async function getGptResponse(
-  messageHistoryQueue: Queue<ChatCompletionRequestMessage>
+  messageHistoryQueue: Queue<{ role: string; content: string }>
 ) {
-  const messages = messageHistoryQueue.toArray();
-  const response = await openai.createChatCompletion({
-    model: 'gpt-4',
+  const messages = messageHistoryQueue.toArray().map((message) => ({
+    name: 'Friend', // Assuming the role is always 'user' for message history
+    role: message.role === 'user' ? 'user' : 'assistant',
+    content: message.content || ''
+  }));
+  const response = await openai.chat.completions.create({
+    model: 'ft:gpt-3.5-turbo-0125:personal::9K82z2Nu',
     messages: [
       {
-        role: 'system',
+        name: 'N',
+        role: 'assistant',
         content:
-          "Your name is Jason. You're a college student at Stanford. Respond to these texts in the diction and phrasing of a college student (so casual). Be nice and concise (texting language). I usually text like this: if someone says 'hey', i'll say 'what's up'"
+          "You are N, a 20 year old college student at Duke University. Respond to these texts in the diction and phrasing of a college student (casual). Be nice and concise using texting language. I usually text like this: if someone says 'hey', i'll say 'what's up'"
       },
       ...messages
     ]
-  });
-  if (
-    response.data.choices === undefined ||
-    response.data.choices.length === 0
-  ) {
-    console.log('*****AI response is empty*****'); // todo probably rare
+  } as ChatCompletionCreateParamsBase); // Type assertion here);
+  if ('choices' in response) {
+    if (response.choices === undefined || response.choices.length === 0) {
+      console.log('*****AI response is empty*****'); // todo probably rare
+      return '';
+    }
+    return response.choices[0].message; // array of strings
+  } else {
+    // Handle the case where the response is a Stream<ChatCompletionChunk>
+    // We do literally nothing bc we aren't suppoesd to do Stream
   }
-  return response.data.choices[0].message; // array of strings
 }
 
 /**
@@ -119,9 +132,9 @@ function getMessageHistory(sender: string) {
 async function handleResponseCycle(sender: string) {
   const senderMessageHistory = getMessageHistory(sender);
   const response = await getGptResponse(senderMessageHistory);
-  if (!response) return;
+  if (!response || response.content === null) return;
   const text = response.content;
-  senderMessageHistory.enqueue(response);
+  senderMessageHistory.enqueue({ role: response.role, content: text });
 
   await delay(3000);
   console.log(
@@ -163,7 +176,7 @@ function shouldShutup(message: InboundMessage) {
 }
 
 console.log('***Building text-bot***');
-sendMessage('Text bot built!', '+16509466066');
+sendMessage('Text bot built!', phoneNumber);
 
 const app = express();
 app.use(express.json());
